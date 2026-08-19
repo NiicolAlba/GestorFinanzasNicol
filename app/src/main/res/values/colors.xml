@@ -1,5 +1,31 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
+    <!-- 🔹 COLORES PRINCIPALES -->
+    <color name="colorPrimario">#A8D8EA</color>          <!-- Azul pastel -->
+    <color name="colorPrimarioVariant">#89C2D9</color>    <!-- Azul pastel oscuro -->
+    <color name="colorPrimarioDark">#6B9FB5</color>       <!-- Azul más oscuro -->
+    <color name="colorSecundario">#4A4A4A</color>         <!-- Gris oscuro -->
+    <color name="colorFondo">#F5F9FC</color>              <!-- Azul muy clarito -->
+
+    <!-- 🔹 COLORES PARA INGRESOS Y GASTOS -->
+    <color name="colorIngreso">#81C784</color>            <!-- Verde pastel -->
+    <color name="colorGasto">#E57373</color>              <!-- Rojo pastel -->
+
+    <!-- 🔹 COLORES DE TEXTO -->
+    <color name="textPrimary">#2D3748</color>             <!-- Gris oscuro para títulos -->
+    <color name="textSecondary">#718096</color>           <!-- Gris medio -->
+    <color name="textOnLightBg">#2D3748</color>           <!-- Texto oscuro en fondos claros -->
+    <color name="textOnDarkBg">#FFFFFF</color>            <!-- Texto blanco en fondos oscuros -->
+
+    <!-- 🔹 COLORES BASE -->
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+
+    <!-- 🔹 COLORES DE BOTONES DEL CRUD -->
+    <color name="btnVerTodos">#A8E6CF</color>             <!-- Verde pastel -->
+    <color name="btnBuscar">#A8D8EA</color>               <!-- Azul pastel -->
+    <color name="btnEditar">#FFD93D</color>               <!-- Amarillo pastel -->
+    <color name="btnEliminar">#FF6B6B</color>             <!-- Rojo pastel -->
+    <color name="btnAgregar">#89C2D9</color>              <!-- Azul pastel oscuro (más contraste) -->
+    <color name="btnCerrar">#FF6B6B</color>               <!-- Rojo pastel -->
 </resources>

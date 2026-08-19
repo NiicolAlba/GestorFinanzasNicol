@@ -1,162 +1,236 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#FFF5F5F5">
+    android:background="@color/colorFondo"
+    android:padding="16dp">
 
-    <!-- Título -->
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="🌸 Mis Finanzas"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:textColor="#FF6B8A"
-        android:layout_marginBottom="16dp"
-        android:padding="12dp"
-        android:background="#FFFFFF"
-        android:elevation="4dp"/>
-
-    <!-- Campos -->
+    <!-- Encabezado con Cerrar Sesión -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="12dp"
-        android:background="#FFFFFF"
-        android:elevation="2dp"
-        android:layout_marginBottom="8dp">
+        android:orientation="horizontal"
+        android:layout_marginBottom="12dp">
 
         <TextView
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:text="✨ Nueva transacción"
-            android:textSize="16sp"
+            android:layout_weight="1"
+            android:text="Mis Finanzas"
+            android:textSize="22sp"
             android:textStyle="bold"
-            android:textColor="#FF6B8A"
-            android:layout_marginBottom="8dp"/>
+            android:textColor="@color/textPrimary"/>
 
-        <EditText
-            android:id="@+id/etId"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="ID (buscar/editar/eliminar)"
-            android:inputType="text"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/etConcepto"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Concepto (ej: Almuerzo)"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/etMonto"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Monto (ej: 15000)"
-            android:inputType="numberDecimal"
-            android:layout_marginBottom="8dp"/>
-
-        <EditText
-            android:id="@+id/etTipo"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Tipo (Ingreso / Gasto)"
-            android:layout_marginBottom="4dp"/>
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Escribe 'Ingreso' o 'Gasto'"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnCerrarSesion"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:text="Salir"
             android:textSize="11sp"
-            android:textColor="#999999"/>
+            android:textColor="@color/textPrimary"
+            app:cornerRadius="8dp"
+            app:backgroundTint="@color/btnEliminar"/>
     </LinearLayout>
 
-    <!-- Botones -->
+    <!-- CardView con el formulario -->
+    <androidx.cardview.widget.CardView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:cardCornerRadius="16dp"
+        app:cardElevation="4dp"
+        android:layout_marginBottom="12dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Registrar transacción"
+                android:textSize="18sp"
+                android:textStyle="bold"
+                android:textColor="@color/textPrimary"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- Campo ID -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_marginBottom="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etId"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="ID"
+                    android:inputType="text"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Campo Concepto (con validación) -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilConcepto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_marginBottom="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etConcepto"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Concepto (mín. 3 caracteres)"
+                    android:inputType="textCapSentences"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Campo Monto (con validación) -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilMonto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_marginBottom="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etMonto"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Monto ($)"
+                    android:inputType="numberDecimal"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- Campo Tipo -->
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilTipo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                android:layout_marginBottom="8dp">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etTipo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:hint="Tipo (Ingreso / Gasto)"
+                    android:inputType="textCapWords"/>
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <!-- ProgressBar -->
+            <ProgressBar
+                android:id="@+id/progressBarMain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:visibility="gone"
+                android:layout_marginBottom="8dp"/>
+
+            <!-- Botón Agregar -->
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnAgregar"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="AGREGAR TRANSACCIÓN"
+                app:cornerRadius="10dp"
+                app:backgroundTint="@color/btnAgregar"
+                android:textColor="@color/textOnDarkBg"
+                android:textSize="13sp"
+                android:textStyle="bold"/>
+
+        </LinearLayout>
+
+    </androidx.cardview.widget.CardView>
+
+    <!-- Botones de acción (CRUD) -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
+        android:layout_marginBottom="12dp"
+        android:weightSum="4">
 
-        <Button
-            android:id="@+id/btnAgregar"
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnVerTodos"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
             android:layout_weight="1"
-            android:text="Agregar"
-            android:backgroundTint="#FFB7C5"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="4dp"/>
+            android:layout_marginEnd="4dp"
+            android:text="VER"
+            android:textSize="11sp"
+            android:textColor="@color/textPrimary"
+            android:textStyle="bold"
+            app:backgroundTint="@color/btnVerTodos"
+            app:strokeColor="@color/btnVerTodos"/>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBuscar"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
             android:layout_weight="1"
-            android:text="Buscar"
-            android:backgroundTint="#B5D8EB"
-            android:textColor="#FFFFFF"
-            android:layout_marginStart="4dp"/>
-    </LinearLayout>
+            android:layout_marginEnd="4dp"
+            android:text="BUSCAR"
+            android:textSize="11sp"
+            android:textColor="@color/textPrimary"
+            android:textStyle="bold"
+            app:backgroundTint="@color/btnBuscar"
+            app:strokeColor="@color/btnBuscar"/>
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_marginBottom="8dp">
-
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnEditar"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
             android:layout_weight="1"
-            android:text="Editar"
-            android:backgroundTint="#FFD9B3"
-            android:textColor="#FFFFFF"
-            android:layout_marginEnd="4dp"/>
+            android:layout_marginEnd="4dp"
+            android:text="EDITAR"
+            android:textSize="11sp"
+            android:textColor="@color/textPrimary"
+            android:textStyle="bold"
+            app:backgroundTint="@color/btnEditar"
+            app:strokeColor="@color/btnEditar"/>
 
-        <Button
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnBorrar"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
+            android:layout_height="44dp"
             android:layout_weight="1"
-            android:text="Eliminar"
-            android:backgroundTint="#FF9E9E"
-            android:textColor="#FFFFFF"
-            android:layout_marginStart="4dp"/>
+            android:text="ELIMINAR"
+            android:textSize="11sp"
+            android:textColor="@color/textOnDarkBg"
+            android:textStyle="bold"
+            app:backgroundTint="@color/btnEliminar"
+            app:strokeColor="@color/btnEliminar"/>
+
     </LinearLayout>
 
-    <Button
-        android:id="@+id/btnVerTodos"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Ver todas las transacciones"
-        android:backgroundTint="#D4A5FF"
-        android:textColor="#FFFFFF"
-        android:layout_marginBottom="12dp"/>
-
+    <!-- Título de la lista -->
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Lista de transacciones"
-        android:textSize="14sp"
+        android:text="Mis transacciones"
+        android:textSize="16sp"
         android:textStyle="bold"
-        android:textColor="#FF6B8A"
+        android:textColor="@color/textPrimary"
         android:layout_marginBottom="4dp"/>
 
+    <!-- RecyclerView con scroll -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvTransacciones"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="#FFFFFF"
-        android:padding="4dp"
-        android:elevation="2dp"/>
+        android:scrollbars="vertical"/>
 
 </LinearLayout>

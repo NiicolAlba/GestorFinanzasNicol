@@ -4,16 +4,24 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
 import java.util.List;
 
 public class AdaptadorTransaccion extends RecyclerView.Adapter<AdaptadorTransaccion.TransaccionViewHolder> {
 
     private List<Transaccion> listaTransacciones;
+    private OnItemClickListener listener;
 
-    public AdaptadorTransaccion(List<Transaccion> listaTransacciones) {
+    public interface OnItemClickListener {
+        void onItemClick(Transaccion transaccion);
+    }
+
+    public AdaptadorTransaccion(List<Transaccion> listaTransacciones, OnItemClickListener listener) {
         this.listaTransacciones = listaTransacciones;
+        this.listener = listener;
     }
 
     @NonNull
@@ -27,20 +35,28 @@ public class AdaptadorTransaccion extends RecyclerView.Adapter<AdaptadorTransacc
     public void onBindViewHolder(@NonNull TransaccionViewHolder holder, int position) {
         Transaccion transaccionActual = listaTransacciones.get(position);
 
-        // Mostrar los datos en los TextView
-        holder.tvId.setText(String.valueOf(transaccionActual.getId()));  // ← NUEVO: muestra el ID
+        holder.tvId.setText(transaccionActual.getId());
         holder.tvConcepto.setText(transaccionActual.getConcepto());
         holder.tvMonto.setText("$ " + transaccionActual.getMonto());
+
+        // 🔹 SIN ICONOS: solo el texto
         holder.tvTipo.setText(transaccionActual.getTipo());
 
-        // Colores pastel según tipo
+        // Colores según tipo
         if (transaccionActual.getTipo().equals("Ingreso")) {
-            holder.tvTipo.setTextColor(android.graphics.Color.parseColor("#66BB6A")); // Verde pastel
-            holder.tvTipo.setBackgroundColor(android.graphics.Color.parseColor("#E8F5E9")); // Fondo verde clarito
+            holder.tvTipo.setBackgroundColor(android.graphics.Color.parseColor("#81C784"));  // Verde pastel
+            holder.tvTipo.setTextColor(android.graphics.Color.WHITE);
         } else {
-            holder.tvTipo.setTextColor(android.graphics.Color.parseColor("#EF5350")); // Rojo pastel
-            holder.tvTipo.setBackgroundColor(android.graphics.Color.parseColor("#FFEBEE")); // Fondo rojo clarito
+            holder.tvTipo.setBackgroundColor(android.graphics.Color.parseColor("#E57373"));  // Rojo pastel
+            holder.tvTipo.setTextColor(android.graphics.Color.WHITE);
         }
+
+        // Click en el item
+        holder.itemView.setOnClickListener(v -> {
+            if (listener != null) {
+                listener.onItemClick(transaccionActual);
+            }
+        });
     }
 
     @Override
@@ -53,7 +69,7 @@ public class AdaptadorTransaccion extends RecyclerView.Adapter<AdaptadorTransacc
 
         public TransaccionViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvId = itemView.findViewById(R.id.tvItemId);          // ← NUEVO
+            tvId = itemView.findViewById(R.id.tvItemId);
             tvConcepto = itemView.findViewById(R.id.tvItemConcepto);
             tvMonto = itemView.findViewById(R.id.tvItemMonto);
             tvTipo = itemView.findViewById(R.id.tvItemTipo);

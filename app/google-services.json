@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "64173100598",
+    "project_id": "gestorfinanzas-nicol",
+    "storage_bucket": "gestorfinanzas-nicol.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:64173100598:android:7cf8daa1131153f6f75297",
+        "android_client_info": {
+          "package_name": "com.example.gestorfinanzasnicol"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAjVZb7SFjRUUC7PopZVr2_SH8fwbMv9Ts"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
