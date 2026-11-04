@@ -3,10 +3,13 @@ package com.example.gestorfinanzasnicol;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.bumptech.glide.Glide;
 
 import java.util.List;
 
@@ -35,23 +38,33 @@ public class AdaptadorTransaccion extends RecyclerView.Adapter<AdaptadorTransacc
     public void onBindViewHolder(@NonNull TransaccionViewHolder holder, int position) {
         Transaccion transaccionActual = listaTransacciones.get(position);
 
-        holder.tvId.setText(transaccionActual.getId());
+        // 🔹 ASIGNAR EL ID AL TEXTVIEW
+        holder.tvItemId.setText("ID: " + transaccionActual.getId());
+
         holder.tvConcepto.setText(transaccionActual.getConcepto());
         holder.tvMonto.setText("$ " + transaccionActual.getMonto());
-
-        // 🔹 SIN ICONOS: solo el texto
         holder.tvTipo.setText(transaccionActual.getTipo());
 
-        // Colores según tipo
         if (transaccionActual.getTipo().equals("Ingreso")) {
-            holder.tvTipo.setBackgroundColor(android.graphics.Color.parseColor("#81C784"));  // Verde pastel
-            holder.tvTipo.setTextColor(android.graphics.Color.WHITE);
+            holder.tvTipo.setBackgroundColor(android.graphics.Color.parseColor("#4CAF50"));
         } else {
-            holder.tvTipo.setBackgroundColor(android.graphics.Color.parseColor("#E57373"));  // Rojo pastel
-            holder.tvTipo.setTextColor(android.graphics.Color.WHITE);
+            holder.tvTipo.setBackgroundColor(android.graphics.Color.parseColor("#E57373"));
         }
 
-        // Click en el item
+        String urlFoto = transaccionActual.getUrlFoto();
+        if (urlFoto != null && !urlFoto.isEmpty()) {
+            holder.ivItemFoto.setVisibility(View.VISIBLE);
+            Glide.with(holder.itemView.getContext())
+                    .load(urlFoto)
+                    .centerCrop()
+                    .placeholder(R.drawable.ic_caja)
+                    .error(R.drawable.ic_caja)
+                    .into(holder.ivItemFoto);
+        } else {
+            holder.ivItemFoto.setVisibility(View.GONE);
+            Glide.with(holder.itemView.getContext()).clear(holder.ivItemFoto);
+        }
+
         holder.itemView.setOnClickListener(v -> {
             if (listener != null) {
                 listener.onItemClick(transaccionActual);
@@ -65,14 +78,16 @@ public class AdaptadorTransaccion extends RecyclerView.Adapter<AdaptadorTransacc
     }
 
     public static class TransaccionViewHolder extends RecyclerView.ViewHolder {
-        TextView tvId, tvConcepto, tvMonto, tvTipo;
+        TextView tvItemId, tvConcepto, tvMonto, tvTipo; // 🔹 Agregamos tvItemId
+        ImageView ivItemFoto;
 
         public TransaccionViewHolder(@NonNull View itemView) {
             super(itemView);
-            tvId = itemView.findViewById(R.id.tvItemId);
+            tvItemId = itemView.findViewById(R.id.tvItemId); // 🔹 Lo inicializamos
             tvConcepto = itemView.findViewById(R.id.tvItemConcepto);
             tvMonto = itemView.findViewById(R.id.tvItemMonto);
             tvTipo = itemView.findViewById(R.id.tvItemTipo);
+            ivItemFoto = itemView.findViewById(R.id.ivItemFoto);
         }
     }
 }

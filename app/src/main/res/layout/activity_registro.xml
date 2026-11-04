@@ -33,8 +33,25 @@
         android:textSize="14sp"
         android:gravity="center"
         android:textColor="@color/textSecondary"
-        android:layout_marginBottom="32dp"/>
+        android:layout_marginBottom="24dp"/>
 
+    <!-- 🔹 NUEVO CAMPO: NOMBRE COMPLETO -->
+    <com.google.android.material.textfield.TextInputLayout
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/etNombreRegistro"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Nombre completo"
+            android:inputType="textPersonName"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- CAMPO CORREO -->
     <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
@@ -50,6 +67,7 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- CAMPO CONTRASEÑA -->
     <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"
@@ -66,6 +84,7 @@
 
     </com.google.android.material.textfield.TextInputLayout>
 
+    <!-- CAMPO CONFIRMAR CONTRASEÑA -->
     <com.google.android.material.textfield.TextInputLayout
         style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
         android:layout_width="match_parent"

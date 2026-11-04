@@ -17,25 +17,32 @@
         android:padding="16dp"
         android:gravity="center_vertical">
 
-        <!-- ID circular -->
-        <TextView
-            android:id="@+id/tvItemId"
-            android:layout_width="44dp"
-            android:layout_height="44dp"
-            android:background="@drawable/bg_id_circular"
-            android:gravity="center"
-            android:text="01"
-            android:textColor="@android:color/white"
-            android:textSize="12sp"
-            android:textStyle="bold"
+        <!-- 🔹 FOTO DEL RECIBO -->
+        <ImageView
+            android:id="@+id/ivItemFoto"
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_caja"
+            android:background="#E0E0E0"
             android:layout_marginEnd="12dp"/>
 
-        <!-- Concepto y Monto -->
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:orientation="vertical">
+
+            <!-- 🔹 NUEVO: TEXTO PARA EL ID -->
+            <TextView
+                android:id="@+id/tvItemId"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="ID: 000"
+                android:textSize="12sp"
+                android:textColor="#757575"
+                android:textStyle="italic"
+                android:layout_marginBottom="2dp"/>
 
             <TextView
                 android:id="@+id/tvItemConcepto"
@@ -54,10 +61,8 @@
                 android:textColor="@color/colorIngreso"
                 android:textSize="14sp"
                 android:layout_marginTop="2dp"/>
-
         </LinearLayout>
 
-        <!-- Tipo (Ingreso/Gasto) SIN ICONOS -->
         <TextView
             android:id="@+id/tvItemTipo"
             android:layout_width="wrap_content"
@@ -72,7 +77,5 @@
             android:paddingBottom="6dp"
             android:background="@drawable/bg_tipo"
             android:gravity="center"/>
-
     </LinearLayout>
-
 </androidx.cardview.widget.CardView>

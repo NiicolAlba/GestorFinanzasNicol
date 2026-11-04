@@ -1,18 +1,19 @@
 package com.example.gestorfinanzasnicol;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.firestore.FirebaseFirestore;
 
 public class LoginActivity extends AppCompatActivity {
 
@@ -21,6 +22,7 @@ public class LoginActivity extends AppCompatActivity {
     private TextView tvIrRegistro;
     private ProgressBar progressBar;
     private FirebaseAuth mAuth;
+    private FirebaseFirestore db;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -28,6 +30,7 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         mAuth = FirebaseAuth.getInstance();
+        db = FirebaseFirestore.getInstance();
 
         etEmail = findViewById(R.id.etLoginCorreo);
         etPassword = findViewById(R.id.etLoginPassword);
@@ -35,9 +38,14 @@ public class LoginActivity extends AppCompatActivity {
         tvIrRegistro = findViewById(R.id.tvIrRegistro);
         progressBar = findViewById(R.id.progressBarLogin);
 
-        tvIrRegistro.setOnClickListener(v -> {
-            startActivity(new Intent(LoginActivity.this, RegistroActivity.class));
-        });
+        // Auto-Login: Si ya hay sesión, saltar a MainActivity
+        if (mAuth.getCurrentUser() != null) {
+            startActivity(new Intent(LoginActivity.this, MainActivity.class));
+            finish();
+            return;
+        }
+
+        tvIrRegistro.setOnClickListener(v -> startActivity(new Intent(LoginActivity.this, RegistroActivity.class)));
 
         btnLogin.setOnClickListener(v -> iniciarSesion());
     }
@@ -46,17 +54,8 @@ public class LoginActivity extends AppCompatActivity {
         String email = etEmail.getText().toString().trim();
         String password = etPassword.getText().toString().trim();
 
-        if (email.isEmpty()) {
-            etEmail.setError("El correo es obligatorio");
-            etEmail.requestFocus();
-            mostrarMensaje("⚠️ Ingresa tu correo electrónico");
-            return;
-        }
-
-        if (password.isEmpty()) {
-            etPassword.setError("La contraseña es obligatoria");
-            etPassword.requestFocus();
-            mostrarMensaje("⚠️ Ingresa tu contraseña");
+        if (email.isEmpty() || password.isEmpty()) {
+            Toast.makeText(this, "Ingresa correo y contraseña", Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -65,75 +64,45 @@ public class LoginActivity extends AppCompatActivity {
 
         mAuth.signInWithEmailAndPassword(email, password)
                 .addOnCompleteListener(this, task -> {
-                    progressBar.setVisibility(View.GONE);
-                    btnLogin.setEnabled(true);
-
                     if (task.isSuccessful()) {
-                        FirebaseUser user = mAuth.getCurrentUser();
-                        mostrarMensaje("✅ Bienvenido " + user.getEmail());
-                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
-                        finish();
+                        String uid = mAuth.getCurrentUser().getUid();
+
+                        // Buscar el rol en Firestore
+                        db.collection("usuarios").document(uid).get()
+                                .addOnSuccessListener(documentSnapshot -> {
+                                    if (documentSnapshot.exists()) {
+                                        String nombre = documentSnapshot.getString("nombre");
+                                        String rol = documentSnapshot.getString("rol");
+
+                                        // Guardar en SharedPreferences (Caché local)
+                                        SharedPreferences prefs = getSharedPreferences("SesionUsuario", MODE_PRIVATE);
+                                        SharedPreferences.Editor editor = prefs.edit();
+                                        editor.putString("nombre", nombre);
+                                        editor.putString("rol", rol);
+                                        editor.apply();
+
+                                        progressBar.setVisibility(View.GONE);
+                                        btnLogin.setEnabled(true);
+                                        Toast.makeText(LoginActivity.this, "✅ Bienvenido " + nombre, Toast.LENGTH_SHORT).show();
+                                        startActivity(new Intent(LoginActivity.this, MainActivity.class));
+                                        finish();
+                                    } else {
+                                        progressBar.setVisibility(View.GONE);
+                                        btnLogin.setEnabled(true);
+                                        Toast.makeText(LoginActivity.this, "No se encontró el perfil", Toast.LENGTH_SHORT).show();
+                                    }
+                                })
+                                .addOnFailureListener(e -> {
+                                    progressBar.setVisibility(View.GONE);
+                                    btnLogin.setEnabled(true);
+                                    Toast.makeText(LoginActivity.this, "Error al leer perfil: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                                });
+
                     } else {
-                        Exception exception = task.getException();
-                        String errorMessage = exception != null ? exception.getMessage() : "Error desconocido";
-
-                        android.util.Log.e("LOGIN_ERROR", "❌ Error: " + errorMessage);
-
-                        String mensajeAmigable = obtenerMensajeAmigable(errorMessage);
-                        mostrarMensaje(mensajeAmigable);
+                        progressBar.setVisibility(View.GONE);
+                        btnLogin.setEnabled(true);
+                        Toast.makeText(LoginActivity.this, "❌ Credenciales incorrectas", Toast.LENGTH_SHORT).show();
                     }
                 });
-    }
-
-    private void mostrarMensaje(String mensaje) {
-        View view = findViewById(android.R.id.content);
-        Snackbar.make(view, mensaje, Snackbar.LENGTH_LONG).show();
-    }
-
-    private String obtenerMensajeAmigable(String error) {
-        if (error == null) return "❌ Error desconocido. Intenta de nuevo.";
-
-        // 🔹 CONVERTIR A MINÚSCULAS PARA FACILITAR LA COMPARACIÓN
-        String errorLower = error.toLowerCase();
-
-        // 🔹 TRADUCCIONES MEJORADAS DE ERRORES DE LOGIN
-        if (errorLower.contains("there is no user record") ||
-                errorLower.contains("user not found")) {
-            return "❌ No existe una cuenta con ese correo electrónico. ¿Quieres registrarte?";
-        }
-        else if (errorLower.contains("the password is invalid") ||
-                errorLower.contains("does not have a password") ||
-                errorLower.contains("invalid password")) {
-            return "❌ Contraseña incorrecta. Intenta de nuevo.";
-        }
-        else if (errorLower.contains("the email address is badly formatted") ||
-                errorLower.contains("invalid email")) {
-            return "❌ Correo electrónico inválido. Verifica el formato.";
-        }
-        else if (errorLower.contains("too many attempts") ||
-                errorLower.contains("too many requests")) {
-            return "⏳ Demasiados intentos. Espera un momento y vuelve a intentar.";
-        }
-        else if (errorLower.contains("network error") ||
-                errorLower.contains("network")) {
-            return "📶 Sin conexión a Internet. Verifica tu red.";
-        }
-        else if (errorLower.contains("the supplied auth credential is incorrect") ||
-                errorLower.contains("malformed") ||
-                errorLower.contains("has expired")) {
-            return "❌ Credenciales incorrectas. Verifica tu correo y contraseña.";
-        }
-        else {
-            return "❌ Error: " + error;
-        }
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        if (mAuth.getCurrentUser() != null) {
-            startActivity(new Intent(LoginActivity.this, MainActivity.class));
-            finish();
-        }
     }
 }

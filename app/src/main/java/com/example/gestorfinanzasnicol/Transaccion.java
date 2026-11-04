@@ -8,6 +8,9 @@ public class Transaccion {
     private String userId;
     private long fecha;
 
+    // 🔹 NUEVO CAMPO PARA LA FOTO
+    private String urlFoto;
+
     // Constructor vacío (necesario para Firestore)
     public Transaccion() {}
 
@@ -28,6 +31,10 @@ public class Transaccion {
     public String getTipo() { return tipo; }
     public String getUserId() { return userId; }
     public long getFecha() { return fecha; }
+
+    // 🔹 GETTER Y SETTER DE LA FOTO
+    public String getUrlFoto() { return urlFoto; }
+    public void setUrlFoto(String urlFoto) { this.urlFoto = urlFoto; }
 
     // Setters (necesarios para Firestore)
     public void setId(String id) { this.id = id; }

@@ -1,17 +1,26 @@
 package com.example.gestorfinanzasnicol;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.bumptech.glide.Glide;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -25,11 +34,17 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+    public static final String CANAL_ID = "canal_alertas_finanzas";
+
     private EditText etId, etConcepto, etMonto, etTipo;
     private TextInputLayout tilConcepto, tilMonto;
-    private Button btnAgregar, btnBuscar, btnEditar, btnBorrar, btnVerTodos, btnCerrarSesion;
+
+    // 🔹 AGREGAMOS btnAbrirUbicacion A LA LISTA
+    private Button btnAgregar, btnBuscar, btnEditar, btnBorrar, btnVerTodos, btnCerrarSesion, btnAdjuntarFoto, btnAbrirMapa, btnAbrirUbicacion;
+
     private RecyclerView rvTransacciones;
     private ProgressBar progressBar;
+    private ImageView ivFotoTransaccion;
 
     private FirebaseFirestore db;
     private FirebaseAuth mAuth;
@@ -39,10 +54,14 @@ public class MainActivity extends AppCompatActivity {
     private List<Transaccion> listaTransacciones;
     private com.google.firebase.firestore.ListenerRegistration listenerFirestore;
 
+    private boolean limpiandoCampos = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        crearCanalDeNotificaciones();
 
         db = FirebaseFirestore.getInstance();
         mAuth = FirebaseAuth.getInstance();
@@ -54,7 +73,6 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
 
-        // Inicializar vistas
         etId = findViewById(R.id.etId);
         etConcepto = findViewById(R.id.etConcepto);
         etMonto = findViewById(R.id.etMonto);
@@ -67,37 +85,44 @@ public class MainActivity extends AppCompatActivity {
         btnBorrar = findViewById(R.id.btnBorrar);
         btnVerTodos = findViewById(R.id.btnVerTodos);
         btnCerrarSesion = findViewById(R.id.btnCerrarSesion);
+        btnAdjuntarFoto = findViewById(R.id.btnAdjuntarFoto);
+        btnAbrirMapa = findViewById(R.id.btnAbrirMapa);
+
+        // 🔹 INICIALIZAMOS EL BOTÓN DEL GPS
+        btnAbrirUbicacion = findViewById(R.id.btnAbrirUbicacion);
+
         rvTransacciones = findViewById(R.id.rvTransacciones);
         progressBar = findViewById(R.id.progressBarMain);
+        ivFotoTransaccion = findViewById(R.id.ivFotoTransaccion);
 
-        // Configurar RecyclerView
         rvTransacciones.setLayoutManager(new LinearLayoutManager(this));
         rvTransacciones.setNestedScrollingEnabled(true);
 
-        // Inicializar adaptador
         listaTransacciones = new ArrayList<>();
         adaptador = new AdaptadorTransaccion(listaTransacciones, transaccion -> {
             etId.setText(transaccion.getId());
             etConcepto.setText(transaccion.getConcepto());
             etMonto.setText(String.valueOf(transaccion.getMonto()));
             etTipo.setText(transaccion.getTipo());
+
+            if (transaccion.getUrlFoto() != null && !transaccion.getUrlFoto().isEmpty()) {
+                ivFotoTransaccion.setVisibility(View.VISIBLE);
+                Glide.with(this).load(transaccion.getUrlFoto()).into(ivFotoTransaccion);
+            } else {
+                ivFotoTransaccion.setVisibility(View.GONE);
+            }
             Toast.makeText(this, "📝 Cargado para editar", Toast.LENGTH_SHORT).show();
         });
         rvTransacciones.setAdapter(adaptador);
 
-        // 🔹 VALIDACIONES EN TIEMPO REAL (TextWatcher)
         configurarValidaciones();
 
-        // Configurar eventos
         btnAgregar.setOnClickListener(v -> agregarTransaccion());
         btnBuscar.setOnClickListener(v -> buscarTransaccion());
         btnEditar.setOnClickListener(v -> actualizarTransaccion());
         btnBorrar.setOnClickListener(v -> eliminarTransaccion());
 
-        btnVerTodos.setOnClickListener(v -> {
-            cargarTransaccionesTiempoReal();
-            Toast.makeText(this, "🔄 Lista actualizada", Toast.LENGTH_SHORT).show();
-        });
+        btnVerTodos.setOnClickListener(v -> cargarTransaccionesTiempoReal());
 
         btnCerrarSesion.setOnClickListener(v -> {
             mAuth.signOut();
@@ -106,37 +131,89 @@ public class MainActivity extends AppCompatActivity {
             finish();
         });
 
-        // Cargar transacciones al iniciar
+        btnAdjuntarFoto.setOnClickListener(v -> {
+            String id = etId.getText().toString().trim();
+            String concepto = etConcepto.getText().toString().trim();
+            String montoStr = etMonto.getText().toString().trim();
+            String tipo = etTipo.getText().toString().trim();
+
+            if (id.isEmpty() || concepto.isEmpty() || montoStr.isEmpty() || tipo.isEmpty()) {
+                Toast.makeText(this, "⚠️ Para guardar con foto, primero llena todos los datos del formulario.", Toast.LENGTH_LONG).show();
+                return;
+            }
+
+            double monto;
+            try {
+                monto = Double.parseDouble(montoStr);
+            } catch (NumberFormatException e) {
+                Toast.makeText(this, "⚠️ El monto debe ser un número válido.", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
+            Intent intent = new Intent(MainActivity.this, SubirFotoActivity.class);
+            intent.putExtra("idTransaccion", id);
+            intent.putExtra("concepto", concepto);
+            intent.putExtra("monto", monto);
+            intent.putExtra("tipo", tipo);
+            startActivity(intent);
+        });
+
+        btnAbrirMapa.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, MapaActivity.class);
+            startActivity(intent);
+        });
+
+        // 🔹 EVENTO DEL BOTÓN DE UBICACIÓN GPS
+        btnAbrirUbicacion.setOnClickListener(v -> {
+            Intent intent = new Intent(MainActivity.this, UbicacionActivity.class);
+            startActivity(intent);
+        });
+
+        SharedPreferences prefs = getSharedPreferences("SesionUsuario", MODE_PRIVATE);
+        String rolCached = prefs.getString("rol", "Vendedor");
+        aplicarPermisosDeRol(rolCached);
+
         cargarTransaccionesTiempoReal();
     }
 
-    // 🔹 CONFIGURAR VALIDACIONES EN TIEMPO REAL (TEXTWATCHER)
+    @Override
+    protected void onResume() {
+        super.onResume();
+        cargarTransaccionesTiempoReal();
+    }
+
+    private void aplicarPermisosDeRol(String rol) {
+        if (rol.equals("Vendedor")) {
+            btnBorrar.setVisibility(View.GONE);
+        } else if (rol.equals("Administrador")) {
+            btnBorrar.setVisibility(View.VISIBLE);
+            btnEditar.setVisibility(View.VISIBLE);
+        }
+    }
+
     private void configurarValidaciones() {
-        // Validar concepto (mínimo 3 caracteres)
         etConcepto.addTextChangedListener(new android.text.TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (limpiandoCampos) return;
                 if (s.length() < 3 && s.length() > 0) {
                     tilConcepto.setError("⚠️ El concepto debe tener al menos 3 caracteres");
                 } else {
                     tilConcepto.setErrorEnabled(false);
                 }
             }
-
             @Override
             public void afterTextChanged(android.text.Editable s) {}
         });
 
-        // Validar monto (debe ser mayor a 0)
         etMonto.addTextChangedListener(new android.text.TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
+                if (limpiandoCampos) return;
                 String texto = s.toString();
                 if (!texto.isEmpty()) {
                     try {
@@ -153,79 +230,42 @@ public class MainActivity extends AppCompatActivity {
                     tilMonto.setError("💰 El monto no puede estar vacío");
                 }
             }
-
             @Override
             public void afterTextChanged(android.text.Editable s) {}
         });
     }
 
-    // 🔹 MÉTODO: Agregar transacción con ID personalizado
     private void agregarTransaccion() {
         String id = etId.getText().toString().trim();
         String concepto = etConcepto.getText().toString().trim();
         String montoStr = etMonto.getText().toString().trim();
         String tipo = etTipo.getText().toString().trim();
 
-        // Validar ID
-        if (id.isEmpty()) {
-            Toast.makeText(this, "❗ Ingresa un ID para la transacción", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Validar concepto (mínimo 3 caracteres)
-        if (concepto.isEmpty()) {
-            Toast.makeText(this, "❗ El concepto no puede estar vacío", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (concepto.length() < 3) {
-            Toast.makeText(this, "❗ El concepto debe tener al menos 3 caracteres", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Validar monto
-        if (montoStr.isEmpty()) {
-            Toast.makeText(this, "❗ El monto no puede estar vacío", Toast.LENGTH_SHORT).show();
+        if (id.isEmpty() || concepto.isEmpty() || montoStr.isEmpty() || tipo.isEmpty()) {
+            Toast.makeText(this, "❗ Todos los campos son obligatorios", Toast.LENGTH_SHORT).show();
             return;
         }
 
         double monto;
         try {
             monto = Double.parseDouble(montoStr);
-            if (monto <= 0) {
-                Toast.makeText(this, "❗ El monto debe ser mayor a 0", Toast.LENGTH_SHORT).show();
-                return;
-            }
         } catch (NumberFormatException e) {
             Toast.makeText(this, "❗ El monto debe ser un número válido", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        // Validar tipo
-        if (tipo.isEmpty()) {
-            Toast.makeText(this, "❗ El tipo no puede estar vacío", Toast.LENGTH_SHORT).show();
-            return;
-        }
-
-        if (!tipo.equals("Ingreso") && !tipo.equals("Gasto")) {
-            Toast.makeText(this, "❗ El tipo debe ser 'Ingreso' o 'Gasto'", Toast.LENGTH_SHORT).show();
             return;
         }
 
         progressBar.setVisibility(View.VISIBLE);
         btnAgregar.setEnabled(false);
 
-        // Verificar si el ID ya existe en Firestore
         db.collection("transacciones").document(id).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     if (documentSnapshot.exists()) {
                         progressBar.setVisibility(View.GONE);
                         btnAgregar.setEnabled(true);
-                        Toast.makeText(this, "⚠️ Ya existe una transacción con ese ID", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(this, "⚠️ Ya existe una transacción con ese ID. Usa otro.", Toast.LENGTH_LONG).show();
                         return;
                     }
 
-                    // Si no existe, guardar la transacción
                     Map<String, Object> transaccionMap = new HashMap<>();
                     transaccionMap.put("id", id);
                     transaccionMap.put("concepto", concepto);
@@ -239,9 +279,11 @@ public class MainActivity extends AppCompatActivity {
                             .addOnSuccessListener(aVoid -> {
                                 progressBar.setVisibility(View.GONE);
                                 btnAgregar.setEnabled(true);
-                                Toast.makeText(MainActivity.this, "✅ Transacción agregada con ID: " + id, Toast.LENGTH_SHORT).show();
+                                Toast.makeText(MainActivity.this, "✅ Transacción agregada", Toast.LENGTH_SHORT).show();
+
+                                lanzarNotificacionLocal("¡Transacción Registrada!", "Se agregó '" + concepto + "' por $" + monto);
+
                                 limpiarCampos();
-                                cargarTransaccionesTiempoReal();
                             })
                             .addOnFailureListener(e -> {
                                 progressBar.setVisibility(View.GONE);
@@ -252,32 +294,32 @@ public class MainActivity extends AppCompatActivity {
                 .addOnFailureListener(e -> {
                     progressBar.setVisibility(View.GONE);
                     btnAgregar.setEnabled(true);
-                    Toast.makeText(MainActivity.this, "❌ Error al verificar ID: " + e.getMessage(), Toast.LENGTH_SHORT).show();
+                    Toast.makeText(MainActivity.this, "❌ Error al verificar ID", Toast.LENGTH_SHORT).show();
                 });
     }
 
-    // 🔹 MÉTODO: Buscar transacción por ID
     private void buscarTransaccion() {
         String id = etId.getText().toString().trim();
-
         if (id.isEmpty()) {
             Toast.makeText(this, "✏️ Ingresa un ID para buscar", Toast.LENGTH_SHORT).show();
             return;
         }
-
         progressBar.setVisibility(View.VISIBLE);
-
         db.collection("transacciones").document(id).get()
                 .addOnSuccessListener(documentSnapshot -> {
                     progressBar.setVisibility(View.GONE);
                     if (documentSnapshot.exists()) {
-                        String concepto = documentSnapshot.getString("concepto");
-                        Double monto = documentSnapshot.getDouble("monto");
-                        String tipo = documentSnapshot.getString("tipo");
+                        etConcepto.setText(documentSnapshot.getString("concepto"));
+                        etMonto.setText(String.valueOf(documentSnapshot.getDouble("monto")));
+                        etTipo.setText(documentSnapshot.getString("tipo"));
 
-                        etConcepto.setText(concepto);
-                        etMonto.setText(String.valueOf(monto));
-                        etTipo.setText(tipo);
+                        String urlFoto = documentSnapshot.getString("urlFoto");
+                        if (urlFoto != null && !urlFoto.isEmpty()) {
+                            ivFotoTransaccion.setVisibility(View.VISIBLE);
+                            Glide.with(this).load(urlFoto).into(ivFotoTransaccion);
+                        } else {
+                            ivFotoTransaccion.setVisibility(View.GONE);
+                        }
 
                         Toast.makeText(this, "🔍 Transacción encontrada", Toast.LENGTH_SHORT).show();
                     } else {
@@ -291,7 +333,6 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    // 🔹 MÉTODO: Actualizar transacción
     private void actualizarTransaccion() {
         String id = etId.getText().toString().trim();
         String concepto = etConcepto.getText().toString().trim();
@@ -321,7 +362,6 @@ public class MainActivity extends AppCompatActivity {
                     btnEditar.setEnabled(true);
                     Toast.makeText(this, "✅ Transacción actualizada", Toast.LENGTH_SHORT).show();
                     limpiarCampos();
-                    cargarTransaccionesTiempoReal();
                 })
                 .addOnFailureListener(e -> {
                     progressBar.setVisibility(View.GONE);
@@ -330,25 +370,20 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    // 🔹 MÉTODO: Eliminar transacción
     private void eliminarTransaccion() {
         String id = etId.getText().toString().trim();
-
         if (id.isEmpty()) {
             Toast.makeText(this, "✏️ Ingresa un ID para eliminar", Toast.LENGTH_SHORT).show();
             return;
         }
-
         progressBar.setVisibility(View.VISIBLE);
         btnBorrar.setEnabled(false);
-
         db.collection("transacciones").document(id).delete()
                 .addOnSuccessListener(aVoid -> {
                     progressBar.setVisibility(View.GONE);
                     btnBorrar.setEnabled(true);
                     Toast.makeText(this, "🗑️ Transacción eliminada", Toast.LENGTH_SHORT).show();
                     limpiarCampos();
-                    cargarTransaccionesTiempoReal();
                 })
                 .addOnFailureListener(e -> {
                     progressBar.setVisibility(View.GONE);
@@ -357,25 +392,19 @@ public class MainActivity extends AppCompatActivity {
                 });
     }
 
-    // 🔹 MÉTODO: Cargar transacciones en tiempo real (LISTENER)
     private void cargarTransaccionesTiempoReal() {
         if (listenerFirestore != null) {
             listenerFirestore.remove();
         }
-
         progressBar.setVisibility(View.VISIBLE);
-
         listenerFirestore = db.collection("transacciones")
                 .whereEqualTo("userId", currentUser.getUid())
                 .orderBy("fecha", com.google.firebase.firestore.Query.Direction.DESCENDING)
                 .addSnapshotListener((value, error) -> {
                     progressBar.setVisibility(View.GONE);
-
                     if (error != null) {
-                        Toast.makeText(this, "❌ Error al cargar: " + error.getMessage(), Toast.LENGTH_SHORT).show();
                         return;
                     }
-
                     if (value != null) {
                         listaTransacciones.clear();
                         for (QueryDocumentSnapshot documento : value) {
@@ -383,20 +412,75 @@ public class MainActivity extends AppCompatActivity {
                             listaTransacciones.add(transaccion);
                         }
                         adaptador.notifyDataSetChanged();
-
-                        if (listaTransacciones.isEmpty()) {
-                            Toast.makeText(this, "📭 No hay transacciones", Toast.LENGTH_SHORT).show();
-                        }
                     }
                 });
     }
 
-    // 🔹 MÉTODO: Limpiar campos
     private void limpiarCampos() {
+        limpiandoCampos = true;
+
         etId.setText("");
         etConcepto.setText("");
         etMonto.setText("");
         etTipo.setText("");
+        ivFotoTransaccion.setVisibility(View.GONE);
+
+        tilMonto.setErrorEnabled(false);
+        tilConcepto.setErrorEnabled(false);
+
+        etId.clearFocus();
+        etConcepto.clearFocus();
+        etMonto.clearFocus();
+        etTipo.clearFocus();
+
+        limpiandoCampos = false;
+    }
+
+    private void crearCanalDeNotificaciones() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence nombreCanal = "Alertas de Finanzas";
+            String descripcion = "Notificaciones de nuevas transacciones";
+            int importancia = NotificationManager.IMPORTANCE_HIGH;
+
+            NotificationChannel canal = new NotificationChannel(CANAL_ID, nombreCanal, importancia);
+            canal.setDescription(descripcion);
+
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(canal);
+            }
+        }
+    }
+
+    private void lanzarNotificacionLocal(String titulo, String mensaje) {
+        Intent destinoIntent = new Intent(this, MainActivity.class);
+        destinoIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                0,
+                destinoIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CANAL_ID)
+                .setSmallIcon(R.drawable.ic_caja)
+                .setContentTitle(titulo)
+                .setContentText(mensaje)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(mensaje))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+
+        NotificationManagerCompat managerCompat = NotificationManagerCompat.from(this);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (androidx.core.content.ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) == android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                managerCompat.notify((int) System.currentTimeMillis(), builder.build());
+            }
+        } else {
+            managerCompat.notify((int) System.currentTimeMillis(), builder.build());
+        }
     }
 
     @Override

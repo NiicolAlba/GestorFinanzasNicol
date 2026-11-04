@@ -74,7 +74,7 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Campo Concepto (con validación) -->
+            <!-- Campo Concepto -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilConcepto"
                 android:layout_width="match_parent"
@@ -91,7 +91,7 @@
 
             </com.google.android.material.textfield.TextInputLayout>
 
-            <!-- Campo Monto (con validación) -->
+            <!-- Campo Monto -->
             <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/tilMonto"
                 android:layout_width="match_parent"
@@ -145,6 +145,18 @@
                 android:textColor="@color/textOnDarkBg"
                 android:textSize="13sp"
                 android:textStyle="bold"/>
+
+            <!-- Imagen para mostrar el recibo -->
+            <ImageView
+                android:id="@+id/ivFotoTransaccion"
+                android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_gravity="center"
+                android:scaleType="centerCrop"
+                android:visibility="gone"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="8dp"
+                android:background="#E0E0E0"/>
 
         </LinearLayout>
 
@@ -214,6 +226,46 @@
             app:strokeColor="@color/btnEliminar"/>
 
     </LinearLayout>
+
+    <!-- BOTÓN PARA GUARDAR CON FOTO -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAdjuntarFoto"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="📷 AGREGAR CON FOTO (OPCIONAL)"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        app:backgroundTint="#8E24AA"
+        app:cornerRadius="10dp"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- BOTÓN PARA ABRIR EL MAPA -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAbrirMapa"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="🗺️ VER MAPA DE UBICACIÓN"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        app:backgroundTint="#1E88E5"
+        app:cornerRadius="10dp"
+        android:layout_marginBottom="8dp"/>
+
+    <!-- 🔹 NUEVO BOTÓN PARA ABRIR EL GPS (UBICACIÓN) -->
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btnAbrirUbicacion"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:text="📍 OBTENER MI UBICACIÓN GPS"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        android:textColor="@color/white"
+        app:backgroundTint="#FF9800"
+        app:cornerRadius="10dp"
+        android:layout_marginBottom="12dp"/>
+    <!-- 🔹 FIN DEL BOTÓN DEL GPS -->
 
     <!-- Título de la lista -->
     <TextView
